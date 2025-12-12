@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCIFSI Assessment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-teal: #1a5f5f;
+            --secondary-teal: #2d8080;
+            --dark-teal: #0f3d3d;
+            --accent-blue: #4a7c8c;
+            --light-bg: #f5f7f7;
+            --white: #ffffff;
+            --text-dark: #1a2e2e;
+            --text-light: #5a6e6e;
+            --border-color: #d0dede;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .question-card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--secondary-teal);
+        }
+
+        .question-number {
+            color: var(--secondary-teal);
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .domain-label {
+            display: inline-block;
+            background: var(--light-bg);
+            color: var(--primary-teal);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .question-text {
+            font-size: 18px;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--white);
+        }
+
+        .option:hover {
+            border-color: var(--secondary-teal);
+            background: rgba(45, 128, 128, 0.05);
+        }
+
+        .option.selected {
+            border-color: var(--secondary-teal);
+            background: rgba(45, 128, 128, 0.1);
+        }
+
+        .option input[type="radio"] {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 15px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: var(--primary-teal);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-teal);
+        }
+
+        .btn-secondary {
+            background: var(--light-bg);
+            color: var(--primary-teal);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .progress-track {
+            height: 8px;
+            background: var(--light-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-teal), var(--secondary-teal));
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Same 50 questions from original assessment
+        const assessmentQuestions = [
+            {id: 1, domain: "Frequency/Duration", question: "How often do you view pornography?", options: [
+                { text: "Rarely or never", value: 0 },
+                { text: "Once a month or less", value: 1 },
+                { text: "2-3 times per month", value: 2 },
+                { text: "Weekly", value: 3 },
+                { text: "Multiple times per week", value: 4 },
+                { text: "Daily or multiple times daily", value: 5 }
+            ]},
+            {id: 2, domain: "Frequency/Duration", question: "When you view pornography, how long do your sessions typically last?", options: [
+                { text: "Less than 15 minutes", value: 0 },
+                { text: "15-30 minutes", value: 1 },
+                { text: "30-60 minutes", value: 2 },
+                { text: "1-2 hours", value: 3 },
+                { text: "2-3 hours", value: 4 },
+                { text: "More than 3 hours", value: 5 }
+            ]},
+            {id: 3, domain: "Frequency/Duration", question: "Has your pornography use increased over time?", options: [
+                { text: "No, it's remained stable or decreased", value: 0 },
+                { text: "Slightly increased", value: 2 },
+                { text: "Moderately increased", value: 3 },
+                { text: "Significantly increased", value: 5 }
+            ]},
+            {id: 4, domain: "Frequency/Duration", question: "Do you find yourself viewing pornography at times you hadn't planned to?", options: [
+                { text: "Never", value: 0 },
+                { text: "Rarely", value: 1 },
+                { text: "Sometimes", value: 2 },
+                { text: "Often", value: 4 },
+                { text: "Very frequently", value: 5 }
+            ]},
+            {id: 5, domain: "Frequency/Duration", question: "How much time do you spend thinking about pornography when you're not viewing it?", options: [
+                { text: "Very little or none", value: 0 },
+                { text: "Occasionally", value: 1 },
+                { text: "A moderate amount", value: 3 },
+                { text: "Frequently throughout the day", value: 4 },
+                { text: "Almost constantly", value: 5 }
+            ]},
+            {id: 6, domain: "Frequency/Duration", question: "Have you tried to reduce your pornography use?", options: [
+                { text: "No, I haven't felt the need", value: 0 },
+                { text: "I've thought about it but haven't tried", value: 1 },
+                { text: "I've tried once or twice", value: 2 },
+                { text: "I've tried several times", value: 3 },
+                { text: "I've tried many times without lasting success", value: 5 }
+            ]},
+            {id: 7, domain: "Frequency/Duration", question: "Do you view pornography during times that interfere with responsibilities (work, school, family time)?", options: [
+                { text: "Never", value: 0 },
+                { text: "Rarely", value: 2 },
+                { text: "Sometimes", value: 3 },
+                { text: "Often", value: 4 },
+                { text: "Very frequently", value: 5 }
+            ]},
+            {id: 8, domain: "Frequency/Duration", question: "How often do you stay up late or lose sleep due to pornography use?", options: [
+                { text: "Never", value: 0 },
+                { text: "Rarely (once a month or less)", value: 1 },
+                { text: "Occasionally (2-3 times per month)", value: 2 },
+                { text: "Frequently (weekly)", value: 4 },
+                { text: "Very often (multiple times per week)", value: 5 }
+            ]},
+            {id: 9, domain: "Emotional Regulation", question: "Do you use pornography to cope with negative emotions (stress, anxiety, loneliness, boredom)?", options: [
+                { text: "Never or rarely", value: 0 },
+                { text: "Sometimes", value: 2 },
+                { text: "Often", value: 3 },
+                { text: "Very frequently", value: 4 },
+                { text: "Almost always when feeling negative emotions", value: 5 }
+            ]},
+            {id: 10, domain: "Emotional Regulation", question: "After viewing pornography, how do you typically feel?", options: [
+                { text: "Neutral or satisfied", value: 0 },
+                { text: "Slightly disappointed in myself", value: 1 },
+                { text: "Regretful or frustrated", value: 3 },
+                { text: "Significant shame or guilt", value: 4 },
+                { text: "Intense self-loathing or despair", value: 5 }
+            ]},
+            {id: 11, domain: "Emotional Regulation", question: "Do you turn to pornography when you feel disconnected from others?", options: [
+                { text: "Never", value: 0 },
+                { text: "Rarely", value: 1 },
+                { text: "Sometimes", value: 3 },
+                { text: "Often", value: 4 },
+                { text: "Almost always", value: 5 }
+            ]},
+            {id: 12, domain: "Emotional Regulation", question: "How would you describe your ability to manage difficult emotions without pornography?", options: [
+                { text: "Very capable—I have multiple healthy coping strategies", value: 0 },
+                { text: "Mostly capable with occasional difficulty", value: 1 },
+                { text: "Moderately capable—I struggle sometimes", value: 2 },
+                { text: "Limited—I often feel overwhelmed without it", value: 4 },
+                { text: "Very limited—pornography feels like my main coping tool", value: 5 }
+            ]},
+            {id: 13, domain: "Emotional Regulation", question: "Do you use pornography as a reward or to celebrate?", options: [
+                { text: "No", value: 0 },
+                { text: "Rarely", value: 1 },
+                { text: "Sometimes", value: 2 },
+                { text: "Often", value: 3 },
+                { text: "Almost always", value: 4 }
+            ]},
+            {id: 14, domain: "Emotional Regulation", question: "How much does pornography use affect your mood throughout the day?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Slightly—brief mood changes", value: 1 },
+                { text: "Moderately—affects my mood for hours", value: 3 },
+                { text: "Significantly—impacts my whole day", value: 4 },
+                { text: "Severely—shapes my entire emotional state", value: 5 }
+            ]},
+            {id: 15, domain: "Emotional Regulation", question: "Do you feel irritable, anxious, or restless when you can't access pornography?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Slightly uncomfortable", value: 1 },
+                { text: "Moderately uncomfortable", value: 3 },
+                { text: "Quite distressed", value: 4 },
+                { text: "Extremely distressed", value: 5 }
+            ]},
+            {id: 16, domain: "Relationship Impact", question: "How has pornography use affected your romantic relationships or marriage?", options: [
+                { text: "No impact", value: 0 },
+                { text: "Minor impact—occasional tension", value: 1 },
+                { text: "Moderate impact—regular conflict", value: 3 },
+                { text: "Significant impact—major source of conflict", value: 4 },
+                { text: "Severe impact—relationship in crisis or ended", value: 5 },
+                { text: "Not currently in a relationship", value: 0 }
+            ]},
+            {id: 17, domain: "Relationship Impact", question: "Have you hidden or lied about your pornography use to a partner or spouse?", options: [
+                { text: "Never", value: 0 },
+                { text: "Once or twice", value: 2 },
+                { text: "A few times", value: 3 },
+                { text: "Many times", value: 4 },
+                { text: "Constantly—it's a pattern of deception", value: 5 },
+                { text: "Not applicable", value: 0 }
+            ]},
+            {id: 18, domain: "Relationship Impact", question: "Do you choose pornography over intimate time with your partner?", options: [
+                { text: "Never", value: 0 },
+                { text: "Rarely", value: 2 },
+                { text: "Sometimes", value: 3 },
+                { text: "Often", value: 4 },
+                { text: "Frequently", value: 5 },
+                { text: "Not applicable", value: 0 }
+            ]},
+            {id: 19, domain: "Relationship Impact", question: "Has pornography use affected your desire for real intimacy with a partner?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Slightly decreased desire", value: 2 },
+                { text: "Moderately decreased desire", value: 3 },
+                { text: "Significantly decreased desire", value: 4 },
+                { text: "Little to no desire for partner intimacy", value: 5 },
+                { text: "Not applicable", value: 0 }
+            ]},
+            {id: 20, domain: "Relationship Impact", question: "Do you feel emotionally distant from your partner due to pornography use?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Slightly distant", value: 2 },
+                { text: "Moderately distant", value: 3 },
+                { text: "Very distant", value: 4 },
+                { text: "Severely disconnected", value: 5 },
+                { text: "Not applicable", value: 0 }
+            ]},
+            {id: 21, domain: "Relationship Impact", question: "How much does pornography use interfere with your ability to form or maintain close relationships?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Minimally", value: 1 },
+                { text: "Somewhat", value: 2 },
+                { text: "Significantly", value: 4 },
+                { text: "Severely—it's a major barrier", value: 5 }
+            ]},
+            {id: 22, domain: "Relationship Impact", question: "Have you lost a relationship or fear losing one due to pornography use?", options: [
+                { text: "No", value: 0 },
+                { text: "I worry about it occasionally", value: 2 },
+                { text: "It's a frequent concern", value: 3 },
+                { text: "Yes, it's damaged relationships", value: 4 },
+                { text: "Yes, I've lost relationships because of it", value: 5 }
+            ]},
+            {id: 23, domain: "Escalation", question: "Have you found yourself seeking out more extreme or novel content over time?", options: [
+                { text: "No", value: 0 },
+                { text: "Slightly—content has changed somewhat", value: 2 },
+                { text: "Moderately—noticeable escalation", value: 3 },
+                { text: "Significantly—major escalation in content", value: 4 },
+                { text: "Severely—content that disturbs or shocks me", value: 5 }
+            ]},
+            {id: 24, domain: "Escalation", question: "Do you need more intense or varied content to achieve the same level of arousal?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Slightly", value: 1 },
+                { text: "Moderately", value: 3 },
+                { text: "Considerably", value: 4 },
+                { text: "Significantly—nothing else works anymore", value: 5 }
+            ]},
+            {id: 25, domain: "Escalation", question: "Have you viewed content that conflicts with your values or that you find disturbing?", options: [
+                { text: "Never", value: 0 },
+                { text: "Once or twice", value: 2 },
+                { text: "A few times", value: 3 },
+                { text: "Regularly", value: 4 },
+                { text: "Very frequently", value: 5 }
+            ]},
+            {id: 26, domain: "Escalation", question: "Has the type of pornography you view changed significantly from when you first started?", options: [
+                { text: "No change", value: 0 },
+                { text: "Minor changes", value: 1 },
+                { text: "Moderate changes", value: 2 },
+                { text: "Significant changes", value: 4 },
+                { text: "Dramatic changes I wouldn't have predicted", value: 5 }
+            ]},
+            {id: 27, domain: "Escalation", question: "Do you spend time searching for specific types of content that are harder to find?", options: [
+                { text: "Never", value: 0 },
+                { text: "Rarely", value: 1 },
+                { text: "Sometimes", value: 2 },
+                { text: "Often—I spend significant time searching", value: 4 },
+                { text: "Very often—searching has become a major part of use", value: 5 }
+            ]},
+            {id: 28, domain: "Escalation", question: "Are you concerned about where your pornography use might lead?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Slightly concerned", value: 1 },
+                { text: "Moderately concerned", value: 3 },
+                { text: "Very concerned", value: 4 },
+                { text: "Extremely concerned—I fear I'm losing control", value: 5 }
+            ]},
+            {id: 29, domain: "Control/Compulsivity", question: "How difficult is it for you to stop viewing pornography once you've started?", options: [
+                { text: "Not difficult—I can stop easily", value: 0 },
+                { text: "Slightly difficult", value: 1 },
+                { text: "Moderately difficult", value: 3 },
+                { text: "Very difficult", value: 4 },
+                { text: "Extremely difficult—I feel unable to stop", value: 5 }
+            ]},
+            {id: 30, domain: "Control/Compulsivity", question: "Do you feel a loss of control over your pornography use?", options: [
+                { text: "No, I feel in control", value: 0 },
+                { text: "Occasionally feel out of control", value: 2 },
+                { text: "Sometimes feel out of control", value: 3 },
+                { text: "Often feel out of control", value: 4 },
+                { text: "Almost always feel out of control", value: 5 }
+            ]},
+            {id: 31, domain: "Control/Compulsivity", question: "Have you made rules for yourself about pornography use and then broken them?", options: [
+                { text: "Never made rules or easily follow them", value: 0 },
+                { text: "Broken rules once or twice", value: 2 },
+                { text: "Broken rules several times", value: 3 },
+                { text: "Frequently break rules", value: 4 },
+                { text: "Consistently break rules—they're meaningless", value: 5 }
+            ]},
+            {id: 32, domain: "Control/Compulsivity", question: "Do you experience urges to view pornography that feel overwhelming or impossible to resist?", options: [
+                { text: "Never", value: 0 },
+                { text: "Rarely", value: 1 },
+                { text: "Sometimes", value: 3 },
+                { text: "Often", value: 4 },
+                { text: "Very frequently—urges dominate my thinking", value: 5 }
+            ]},
+            {id: 33, domain: "Control/Compulsivity", question: "How much mental energy do you spend trying to control or manage your pornography use?", options: [
+                { text: "Very little or none", value: 0 },
+                { text: "A small amount", value: 1 },
+                { text: "A moderate amount", value: 2 },
+                { text: "A lot of mental energy", value: 4 },
+                { text: "It consumes most of my mental bandwidth", value: 5 }
+            ]},
+            {id: 34, domain: "Control/Compulsivity", question: "Do you feel like pornography use controls you rather than you controlling it?", options: [
+                { text: "Not at all—I'm in control", value: 0 },
+                { text: "Occasionally", value: 2 },
+                { text: "Sometimes", value: 3 },
+                { text: "Often", value: 4 },
+                { text: "Almost always—it controls my life", value: 5 }
+            ]},
+            {id: 35, domain: "Control/Compulsivity", question: "How confident are you that you could stop using pornography for 30 days if you decided to?", options: [
+                { text: "Very confident—I could do it easily", value: 0 },
+                { text: "Fairly confident", value: 1 },
+                { text: "Somewhat confident", value: 2 },
+                { text: "Not very confident", value: 3 },
+                { text: "Not at all confident—I know I couldn't", value: 5 }
+            ]},
+            {id: 36, domain: "Consequences", question: "Has pornography use negatively affected your work or academic performance?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Minor impact—occasionally distracted", value: 1 },
+                { text: "Moderate impact—regular interference", value: 3 },
+                { text: "Significant impact—performance has declined", value: 4 },
+                { text: "Severe impact—job or academics at risk", value: 5 }
+            ]},
+            {id: 37, domain: "Consequences", question: "Have you experienced financial consequences due to pornography (subscriptions, lost work time, etc.)?", options: [
+                { text: "No", value: 0 },
+                { text: "Minor expenses", value: 1 },
+                { text: "Moderate expenses that concern me", value: 2 },
+                { text: "Significant financial impact", value: 4 },
+                { text: "Severe financial problems", value: 5 }
+            ]},
+            {id: 38, domain: "Consequences", question: "Has pornography use led to risky behavior (viewing at work, in public, etc.)?", options: [
+                { text: "Never", value: 0 },
+                { text: "Once or twice", value: 2 },
+                { text: "A few times", value: 3 },
+                { text: "Regularly", value: 4 },
+                { text: "Frequently—I take significant risks", value: 5 }
+            ]},
+            {id: 39, domain: "Consequences", question: "Have you gotten in trouble or faced consequences because of pornography use?", options: [
+                { text: "Never", value: 0 },
+                { text: "Close calls but no real consequences", value: 1 },
+                { text: "Minor consequences", value: 2 },
+                { text: "Moderate consequences", value: 4 },
+                { text: "Serious consequences (job loss, legal issues, etc.)", value: 5 }
+            ]},
+            {id: 40, domain: "Consequences", question: "Has pornography use affected your physical health (sleep, energy, hygiene, exercise)?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Minor effects", value: 1 },
+                { text: "Moderate effects", value: 2 },
+                { text: "Significant effects", value: 4 },
+                { text: "Severe effects on my health", value: 5 }
+            ]},
+            {id: 41, domain: "Consequences", question: "Do you continue using pornography despite knowing it causes problems in your life?", options: [
+                { text: "Not applicable—it doesn't cause problems", value: 0 },
+                { text: "Rarely continue despite problems", value: 1 },
+                { text: "Sometimes continue despite problems", value: 3 },
+                { text: "Often continue despite clear problems", value: 4 },
+                { text: "Always continue despite severe problems", value: 5 }
+            ]},
+            {id: 42, domain: "Shame/Secrecy", question: "How much shame do you experience related to pornography use?", options: [
+                { text: "None", value: 0 },
+                { text: "Mild shame", value: 1 },
+                { text: "Moderate shame", value: 3 },
+                { text: "Significant shame", value: 4 },
+                { text: "Overwhelming shame that affects my self-worth", value: 5 }
+            ]},
+            {id: 43, domain: "Shame/Secrecy", question: "How much effort do you put into hiding your pornography use from others?", options: [
+                { text: "None—I don't feel the need to hide it", value: 0 },
+                { text: "Minimal effort", value: 1 },
+                { text: "Moderate effort", value: 2 },
+                { text: "Significant effort—I'm very careful", value: 4 },
+                { text: "Extreme effort—I go to great lengths to hide it", value: 5 }
+            ]},
+            {id: 44, domain: "Shame/Secrecy", question: "Do you feel like you're living a double life because of pornography use?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Slightly", value: 1 },
+                { text: "Moderately", value: 3 },
+                { text: "Significantly—it's a major secret", value: 4 },
+                { text: "Completely—I feel like two different people", value: 5 }
+            ]},
+            {id: 45, domain: "Shame/Secrecy", question: "Have you deleted browser history, messages, or covered your tracks to hide pornography use?", options: [
+                { text: "Never", value: 0 },
+                { text: "Once or twice", value: 1 },
+                { text: "Sometimes", value: 2 },
+                { text: "Regularly", value: 4 },
+                { text: "Always—it's automatic behavior", value: 5 }
+            ]},
+            {id: 46, domain: "Shame/Secrecy", question: "Do you isolate yourself from others to view pornography?", options: [
+                { text: "Never", value: 0 },
+                { text: "Rarely", value: 1 },
+                { text: "Sometimes", value: 2 },
+                { text: "Often", value: 4 },
+                { text: "Very frequently—I choose isolation over connection", value: 5 }
+            ]},
+            {id: 47, domain: "Shame/Secrecy", question: "How difficult would it be for you to talk honestly about your pornography use with someone you trust?", options: [
+                { text: "Not difficult—I could do it", value: 0 },
+                { text: "Somewhat uncomfortable but possible", value: 1 },
+                { text: "Very uncomfortable and difficult", value: 3 },
+                { text: "Extremely difficult—the thought terrifies me", value: 4 },
+                { text: "Impossible—I could never tell anyone", value: 5 }
+            ]},
+            {id: 48, domain: "Sexual Functioning", question: "Has pornography use affected your sexual performance with a partner?", options: [
+                { text: "Not at all", value: 0 },
+                { text: "Minor effects occasionally", value: 2 },
+                { text: "Moderate effects regularly", value: 3 },
+                { text: "Significant effects—consistent problems", value: 4 },
+                { text: "Severe effects—major sexual dysfunction", value: 5 },
+                { text: "Not applicable", value: 0 }
+            ]},
+            {id: 49, domain: "Sexual Functioning", question: "Do you have difficulty becoming or staying aroused with a real partner compared to pornography?", options: [
+                { text: "No difficulty", value: 0 },
+                { text: "Slight difficulty occasionally", value: 2 },
+                { text: "Moderate difficulty regularly", value: 3 },
+                { text: "Significant difficulty most of the time", value: 4 },
+                { text: "Severe difficulty or inability", value: 5 },
+                { text: "Not applicable", value: 0 }
+            ]},
+            {id: 50, domain: "Sexual Functioning", question: "Do you find yourself needing to think about pornography during intimacy with a partner?", options: [
+                { text: "Never", value: 0 },
+                { text: "Rarely", value: 2 },
+                { text: "Sometimes", value: 3 },
+                { text: "Often", value: 4 },
+                { text: "Almost always or always", value: 5 },
+                { text: "Not applicable", value: 0 }
+            ]}
+        ];
+
+        function AssessmentApp() {
+            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+            const [answers, setAnswers] = useState({});
+
+            useEffect(() => {
+                // Send height updates to parent
+                const sendHeight = () => {
+                    window.parent.postMessage({
+                        type: 'scifsi-assessment-height',
+                        height: document.body.scrollHeight
+                    }, '*');
+                };
+                sendHeight();
+                window.addEventListener('resize', sendHeight);
+                return () => window.removeEventListener('resize', sendHeight);
+            }, [currentQuestionIndex]);
+
+            const handleAnswer = (questionId, value) => {
+                setAnswers(prev => ({
+                    ...prev,
+                    [questionId]: value
+                }));
+            };
+
+            const calculateResults = () => {
+                const domainScores = {};
+                const domainMaxScores = {};
+                
+                assessmentQuestions.forEach(q => {
+                    if (!domainScores[q.domain]) {
+                        domainScores[q.domain] = 0;
+                        domainMaxScores[q.domain] = 0;
+                    }
+                    
+                    const maxValue = Math.max(...q.options.map(opt => opt.value));
+                    domainMaxScores[q.domain] += maxValue;
+                    
+                    if (answers[q.id] !== undefined) {
+                        domainScores[q.domain] += answers[q.id];
+                    }
+                });
+
+                const domainPercentages = {};
+                Object.keys(domainScores).forEach(domain => {
+                    domainPercentages[domain] = Math.round(
+                        (domainScores[domain] / domainMaxScores[domain]) * 100
+                    );
+                });
+
+                const totalScore = Object.values(domainScores).reduce((sum, score) => sum + score, 0);
+                const maxPossibleScore = Object.values(domainMaxScores).reduce((sum, max) => sum + max, 0);
+                const overallPercentage = Math.round((totalScore / maxPossibleScore) * 100);
+
+                return {
+                    domainScores,
+                    domainPercentages,
+                    overallPercentage,
+                    totalScore,
+                    maxPossibleScore
+                };
+            };
+
+            const handleNext = () => {
+                if (currentQuestionIndex < assessmentQuestions.length - 1) {
+                    setCurrentQuestionIndex(prev => prev + 1);
+                } else {
+                    // Assessment complete - send results to parent
+                    const results = calculateResults();
+                    window.parent.postMessage({
+                        type: 'scifsi-assessment-complete',
+                        score: results.overallPercentage,
+                        results: results
+                    }, '*');
+                }
+            };
+
+            const handlePrevious = () => {
+                if (currentQuestionIndex > 0) {
+                    setCurrentQuestionIndex(prev => prev - 1);
+                }
+            };
+
+            const currentQuestion = assessmentQuestions[currentQuestionIndex];
+            const progress = ((currentQuestionIndex + 1) / assessmentQuestions.length) * 100;
+            const isAnswered = answers[currentQuestion.id] !== undefined;
+
+            return (
+                <div className="container">
+                    <div className="progress-bar">
+                        <div className="progress-text">
+                            Question {currentQuestionIndex + 1} of {assessmentQuestions.length}
+                        </div>
+                        <div className="progress-track">
+                            <div className="progress-fill" style={{width: `${progress}%`}}></div>
+                        </div>
+                    </div>
+
+                    <div className="question-card">
+                        <div className="question-number">Question {currentQuestion.id}</div>
+                        <div className="domain-label">{currentQuestion.domain}</div>
+                        <h2 className="question-text">{currentQuestion.question}</h2>
+                        
+                        <div className="options">
+                            {currentQuestion.options.map((option, index) => (
+                                <div 
+                                    key={index}
+                                    className={`option ${answers[currentQuestion.id] === option.value ? 'selected' : ''}`}
+                                    onClick={() => handleAnswer(currentQuestion.id, option.value)}
+                                >
+                                    <input 
+                                        type="radio" 
+                                        name={`question-${currentQuestion.id}`}
+                                        checked={answers[currentQuestion.id] === option.value}
+                                        onChange={() => handleAnswer(currentQuestion.id, option.value)}
+                                    />
+                                    <label>{option.text}</label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="navigation">
+                        <button 
+                            className="btn btn-secondary" 
+                            onClick={handlePrevious}
+                            disabled={currentQuestionIndex === 0}
+                        >
+                            Previous
+                        </button>
+                        <button 
+                            className="btn btn-primary" 
+                            onClick={handleNext}
+                            disabled={!isAnswered}
+                        >
+                            {currentQuestionIndex === assessmentQuestions.length - 1 ? 'Complete Assessment' : 'Next'}
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<AssessmentApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
